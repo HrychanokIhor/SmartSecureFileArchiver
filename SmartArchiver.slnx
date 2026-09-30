@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SmartArchiver.CLI/SmartArchiver.CLI.csproj" />
+    <Project Path="src/SmartArchiver.Core/SmartArchiver.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SmartArchiver.Tests/SmartArchiver.Tests.csproj" />
+  </Folder>
+</Solution>
