@@ -1,0 +1,12 @@
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/bin/Debug/net10.0/SmartArchiver.Core.deps.json
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/bin/Debug/net10.0/SmartArchiver.Core.dll
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/bin/Debug/net10.0/SmartArchiver.Core.pdb
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/obj/Debug/net10.0/SmartArchiver.Core.GeneratedMSBuildEditorConfig.editorconfig
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/obj/Debug/net10.0/SmartArchiver.Core.AssemblyInfoInputs.cache
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/obj/Debug/net10.0/SmartArchiver.Core.AssemblyInfo.cs
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/obj/Debug/net10.0/SmartArchiver.Core.csproj.CoreCompileInputs.cache
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/obj/Debug/net10.0/SmartArchiver.Core.sourcelink.json
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/obj/Debug/net10.0/SmartArchiver.Core.dll
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/obj/Debug/net10.0/refint/SmartArchiver.Core.dll
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/obj/Debug/net10.0/SmartArchiver.Core.pdb
+/Users/dmitrijbilyk/Desktop/Алгоритми/SmartSecureFileArchiver/src/SmartArchiver.Core/obj/Debug/net10.0/ref/SmartArchiver.Core.dll

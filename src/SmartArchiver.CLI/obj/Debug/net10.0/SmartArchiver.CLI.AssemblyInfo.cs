@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SmartArchiver.CLI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+732a10a75e21eb055984f67a17b165e0a028e935")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9f8cb3269630bef7f516ac08279236f06a170937")]
 [assembly: System.Reflection.AssemblyProductAttribute("SmartArchiver.CLI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SmartArchiver.CLI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
