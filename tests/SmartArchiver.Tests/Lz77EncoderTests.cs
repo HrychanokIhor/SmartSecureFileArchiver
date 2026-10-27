@@ -41,5 +41,27 @@ namespace SmartArchiver.Tests
             Assert.Equal(3, match.Distance);
             Assert.Equal(6, match.Length);
         }
+        [Fact]
+        public void EncodeLazy_Decode_RoundTrip_ReturnsOriginalData()
+        {
+            var algorithm = new Lz77Algorithm();
+            var originalBytes = Encoding.UTF8.GetBytes("abcabcabcabcxyzxyz");
+
+            var tokens = algorithm.EncodeLazy(originalBytes);
+            var decodedBytes = algorithm.Decode(tokens);
+
+            Assert.Equal(originalBytes, decodedBytes);
+        }
+        [Fact]
+        public void Compare_Greedy_Vs_LazyGreedy_TokenCount()
+        {
+            var algorithm = new Lz77Algorithm();
+            var originalBytes = Encoding.UTF8.GetBytes("abcbabcbab");
+
+            var greedyTokens = new List<ILz77Token>(algorithm.Encode(originalBytes));
+            var lazyTokens = new List<ILz77Token>(algorithm.EncodeLazy(originalBytes));
+
+            Assert.True(lazyTokens.Count <= greedyTokens.Count, $"Lazy ({lazyTokens.Count}) мав би бути ефективнішим за Greedy ({greedyTokens.Count})");
+        }
     }
 }

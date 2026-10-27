@@ -114,6 +114,96 @@ namespace SmartArchiver.Core.Algorithms
             return (input[index] << 16) | (input[index + 1] << 8) | input[index + 2];
         }
 
+        public IEnumerable<ILz77Token> EncodeLazy(byte[] input)
+        {
+            var tokens = new List<ILz77Token>();
+            int minMatch = 3;
+            int maxMatch = 258;
+            int windowSize = 32768;
+
+            var dictionary = new Dictionary<int, List<int>>();
+            int i = 0;
+
+            while (i < input.Length)
+            {
+                var match1 = FindLongestMatch(input, i, dictionary, windowSize, minMatch, maxMatch);
+
+                if (match1.Length >= minMatch && i + 1 < input.Length)
+                {
+                    var match2 = FindLongestMatch(input, i + 1, dictionary, windowSize, minMatch, maxMatch);
+
+                    if (match2.Length > match1.Length)
+                    {
+                        tokens.Add(new LiteralToken(input[i]));
+                        AddHash(input, i, dictionary, minMatch);
+                        i++;
+                        continue; // На наступній ітерації цикл знайде match2
+                    }
+                }
+
+                if (match1.Length >= minMatch)
+                {
+                    tokens.Add(new MatchToken(match1.Distance, match1.Length));
+                    for (int j = 0; j < match1.Length; j++)
+                    {
+                        AddHash(input, i + j, dictionary, minMatch);
+                    }
+                    i += match1.Length;
+                }
+                else
+                {
+                    tokens.Add(new LiteralToken(input[i]));
+                    AddHash(input, i, dictionary, minMatch);
+                    i++;
+                }
+            }
+
+            return tokens;
+        }
+
+        private (int Distance, int Length) FindLongestMatch(byte[] input, int index, Dictionary<int, List<int>> dict, int windowSize, int minMatch, int maxMatch)
+        {
+            int bestLength = 0;
+            int bestDist = 0;
+
+            if (index + minMatch > input.Length) return (0, 0);
+
+            int h = GetHash(input, index);
+            if (dict.ContainsKey(h))
+            {
+                var candidates = dict[h];
+                candidates.RemoveAll(c => index - c > windowSize);
+
+                foreach (var candidateIndex in candidates)
+                {
+                    int currentLength = 0;
+                    while (currentLength < maxMatch &&
+                        index + currentLength < input.Length &&
+                        input[candidateIndex + currentLength] == input[index + currentLength])
+                    {
+                        currentLength++;
+                    }
+
+                    if (currentLength > bestLength)
+                    {
+                        bestLength = currentLength;
+                        bestDist = index - candidateIndex;
+                    }
+                }
+            }
+            return (bestDist, bestLength);
+        }
+
+        private void AddHash(byte[] input, int index, Dictionary<int, List<int>> dict, int minMatch)
+        {
+            if (index + minMatch <= input.Length)
+            {
+                int h = GetHash(input, index);
+                if (!dict.ContainsKey(h)) dict[h] = new List<int>();
+                dict[h].Add(index);
+            }
+        }
+
     }
     
 }
