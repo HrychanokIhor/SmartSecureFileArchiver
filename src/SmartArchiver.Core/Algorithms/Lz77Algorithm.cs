@@ -34,5 +34,86 @@ namespace SmartArchiver.Core.Algorithms
             }
             return buffer.ToArray();
         }
+        public IEnumerable<ILz77Token> Encode(byte[] input)
+        {
+            var tokens = new List<ILz77Token>();
+            int minMatch = 3;
+            int maxMatch = 258;
+            int windowSize = 32768;
+
+            var dictionary = new Dictionary<int, List<int>>();
+
+            int i = 0;
+            while (i < input.Length)
+            {
+                int matchDistance = 0;
+                int matchLength = 0;
+
+                if (i + minMatch <= input.Length)
+                {
+                    int currentHash = GetHash(input, i);
+
+                    if (dictionary.ContainsKey(currentHash))
+                    {
+                        var candidates = dictionary[currentHash];
+                        candidates.RemoveAll(c => i - c > windowSize);
+
+                        foreach (var candidateIndex in candidates)
+                        {
+                            int currentLength = 0;
+                            while (currentLength < maxMatch &&
+                                i + currentLength < input.Length &&
+                                input[candidateIndex + currentLength] == input[i + currentLength])
+                            {
+                                currentLength++;
+                            }
+
+                            if (currentLength > matchLength)
+                            {
+                                matchLength = currentLength;
+                                matchDistance = i - candidateIndex;
+                            }
+                        }
+                    }
+                }
+
+                if (matchLength >= minMatch)
+                {
+                    tokens.Add(new MatchToken(matchDistance, matchLength));
+
+                    for (int j = 0; j < matchLength; j++)
+                    {
+                        if (i + j + minMatch <= input.Length)
+                        {
+                            int h = GetHash(input, i + j);
+                            if (!dictionary.ContainsKey(h)) dictionary[h] = new List<int>();
+                            dictionary[h].Add(i + j);
+                        }
+                    }
+                    i += matchLength;
+                }
+                else
+                {
+                    tokens.Add(new LiteralToken(input[i]));
+
+                    if (i + minMatch <= input.Length)
+                    {
+                        int h = GetHash(input, i);
+                        if (!dictionary.ContainsKey(h)) dictionary[h] = new List<int>();
+                        dictionary[h].Add(i);
+                    }
+                    i++;
+                }
+            }
+
+            return tokens;
+        }
+
+        private int GetHash(byte[] input, int index)
+        {
+            return (input[index] << 16) | (input[index + 1] << 8) | input[index + 2];
+        }
+
     }
+    
 }
