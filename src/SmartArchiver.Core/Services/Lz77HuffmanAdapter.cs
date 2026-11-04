@@ -9,7 +9,7 @@ namespace SmartArchiver.Core.Services
 {
     public static class Lz77HuffmanAdapter
     {
-        public static IEnumerable<HuffmanToken> ToHuffman(IEnumerable<ILz77Token> tokens)
+        public static IReadOnlyList<HuffmanToken> ToHuffman(IEnumerable<ILz77Token> tokens)
         {
             return tokens.Select(token => token switch
             {
@@ -18,7 +18,7 @@ namespace SmartArchiver.Core.Services
                                    && match.Distance > 0 && match.Distance <= ushort.MaxValue
                     => HuffmanToken.FromMatch((ushort)match.Length, (ushort)match.Distance),
                 _ => throw new InvalidDataException("Непідтримуваний або завеликий LZ77-токен.")
-            });
+            }).ToList(); // Одразу конвертуємо в список для Lz77HuffmanCodec
         }
 
         public static IEnumerable<ILz77Token> FromHuffman(IEnumerable<HuffmanToken> huffmanTokens)
