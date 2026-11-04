@@ -38,13 +38,14 @@ namespace SmartArchiver.Tests
             var huffmanTokens = Lz77HuffmanAdapter.ToHuffman(lz77Tokens).ToList();
 
             Assert.Equal(2, huffmanTokens.Count);
-            
-            Assert.True(huffmanTokens[0].IsLiteral);
-            Assert.Equal((byte)'A', huffmanTokens[0].LiteralValue);
-            
-            Assert.False(huffmanTokens[1].IsLiteral);
-            Assert.Equal(10, huffmanTokens[1].MatchLength);
-            Assert.Equal(5, huffmanTokens[1].MatchDistance);
+    
+            Assert.True(huffmanTokens[0].Literal.HasValue);
+            Assert.Equal((byte)'A', huffmanTokens[0].Literal.Value);
+    
+
+            Assert.False(huffmanTokens[1].Literal.HasValue);
+            Assert.Equal(10, huffmanTokens[1].Length);
+            Assert.Equal(5, huffmanTokens[1].Distance);
         }
     }
 }

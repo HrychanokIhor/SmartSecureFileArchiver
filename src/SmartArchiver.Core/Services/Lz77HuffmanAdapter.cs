@@ -17,7 +17,7 @@ namespace SmartArchiver.Core.Services
                 MatchToken match when match.Length > 0 && match.Length <= ushort.MaxValue
                                    && match.Distance > 0 && match.Distance <= ushort.MaxValue
                     => HuffmanToken.FromMatch((ushort)match.Length, (ushort)match.Distance),
-                _ => throw new InvalidDataException("Непідтримуваний LZ77-токен.")
+                _ => throw new InvalidDataException("Непідтримуваний або завеликий LZ77-токен.")
             });
         }
 
@@ -25,13 +25,12 @@ namespace SmartArchiver.Core.Services
         {
             return huffmanTokens.Select(token =>
             {
-                if (token.IsLiteral)
+                if (token.Literal.HasValue)
                 {
-                    return (ILz77Token)new LiteralToken(token.LiteralValue);
+                    return (ILz77Token)new LiteralToken(token.Literal.Value);
                 }
                 
-
-                return new MatchToken(token.MatchDistance, token.MatchLength);
+                return new MatchToken(token.Distance, token.Length);
             });
         }
     }
