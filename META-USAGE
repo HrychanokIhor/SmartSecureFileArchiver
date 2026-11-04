@@ -1,0 +1,17 @@
+# Використання інструментів допомоги
+
+2026-10-29 — OpenAI Codex згенерував реалізацію канонічного Huffman,
+адаптер IHuffmanCoder, попередній контракт трьох LZ77/Huffman-потоків,
+автотести та docs/HUFFMAN.md на пряме прохання HrychanokIhor.
+
+Змінені/додані файли:
+- src/SmartArchiver.Core/Services/HuffmanCoder.cs
+- src/SmartArchiver.Core/Services/Huffman/*.cs
+- tests/SmartArchiver.Tests/Huffman/HuffmanTests.cs
+- docs/HUFFMAN.md
+- README.md (посилання на модуль)
+
+Код не слід представляти як самостійно написаний без цієї декларації.
+Студент має перевірити, зрозуміти й уміти пояснити реалізацію на захисті.
+Точний FORMAT_SPEC_P2.md ще не надано; контейнер HUF1 попередній.
+Цей запис не замінює додатковий шаблон META-USAGE, якщо його видасть викладач.
