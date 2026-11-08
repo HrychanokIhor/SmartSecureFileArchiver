@@ -19,8 +19,10 @@ namespace SmartArchiver.Optimization
         private readonly bool _elitism;
 
         /// <summary>
-        /// Ініціалізує новий екземпляр генетичного оптимізатора.
+        /// Загальна кількість викликаних оцінок fitness для звірки бюджету з RandomSearch.
         /// </summary>
+        public int TotalEvaluations { get; private set; }
+
         public GeneticOptimizer(
             Func<ArchiverParameters, double> fitnessFunction,
             int populationSize = 20,
@@ -29,7 +31,7 @@ namespace SmartArchiver.Optimization
             int tournamentSize = 3,
             bool elitism = true)
         {
-            _fitnessFunction = fitnessFunction;
+            _fitnessFunction = fitnessFunction ?? throw new ArgumentNullException(nameof(fitnessFunction));
             _populationSize = populationSize;
             _generations = generations;
             _mutationRate = mutationRate;
@@ -43,30 +45,31 @@ namespace SmartArchiver.Optimization
         public (ArchiverParameters BestParams, double BestFitness, List<double> history) Optimize()
         {
             var history = new List<double>();
+            TotalEvaluations = 0;
+
+            // 1. Ініціалізація та первинна оцінка популяції (використовуємо кортежі замість класу Individual)
             var population = InitializePopulation();
-
             EvaluatePopulation(population);
-            
-            // Сортування за спаданням Fitness (максимізація метрики Q)
-            population = population.OrderByDescending(ind => ind.Fitness).ToList();
-            double initialBestFitness = population.First().Fitness;
-            history.Add(initialBestFitness);
 
+            // Сортуємо популяцію за спаданням Fitness
+            population = population.OrderByDescending(ind => ind.Fitness).ToList();
+            
+            double bestSoFar = population.First().Fitness;
+            history.Add(bestSoFar);
+
+            // 2. Основний цикл еволюції
             for (int gen = 0; gen < _generations; gen++)
             {
-                var newPopulation = new List<Individual>();
+                var newPopulation = new List<(ArchiverParameters Parameters, double Fitness)>();
 
-                // Елітизм: гарантовано переносимо найкращу особину у нове покоління
+                // Елітизм: зберігаємо найкращу особину попереднього покоління
                 if (_elitism)
                 {
-                    newPopulation.Add(new Individual
-                    {
-                        Parameters = population.First().Parameters.Clone(),
-                        Fitness = population.First().Fitness
-                    });
+                    var elite = population.First();
+                    newPopulation.Add((elite.Parameters.Clone(), elite.Fitness));
                 }
 
-                // Формування нової популяції через селекцію, кросовер та мутацію
+                // Створення нових особин
                 while (newPopulation.Count < _populationSize)
                 {
                     var parent1 = TournamentSelection(population);
@@ -75,61 +78,71 @@ namespace SmartArchiver.Optimization
                     var childParams = Crossover(parent1.Parameters, parent2.Parameters);
                     Mutate(childParams);
 
-                    newPopulation.Add(new Individual { Parameters = childParams });
+                    newPopulation.Add((childParams, 0.0));
                 }
 
-                EvaluatePopulation(newPopulation);
+                // Оцінюємо нових особин
+                int startIndex = _elitism ? 1 : 0;
+                for (int i = startIndex; i < newPopulation.Count; i++)
+                {
+                    double fit = _fitnessFunction(newPopulation[i].Parameters);
+                    newPopulation[i] = (newPopulation[i].Parameters, fit);
+                    TotalEvaluations++;
+                }
+
                 population = newPopulation.OrderByDescending(ind => ind.Fitness).ToList();
 
-                // Перевірка інваріанту елітизму (найкращий результат ніколи не гірший за початковий)
-                double currentBest = population.First().Fitness;
-                if (currentBest < initialBestFitness && _elitism)
+                double currentGenBest = population.First().Fitness;
+                if (currentGenBest > bestSoFar)
                 {
-                    currentBest = initialBestFitness;
+                    bestSoFar = currentGenBest;
                 }
 
-                history.Add(currentBest);
+                history.Add(bestSoFar);
             }
 
-            var best = population.First();
-            return (best.Parameters, best.Fitness, history);
+            var bestIndividual = population.First();
+            return (bestIndividual.Parameters, bestSoFar, history);
         }
 
-        private List<Individual> InitializePopulation()
+        private List<(ArchiverParameters Parameters, double Fitness)> InitializePopulation()
         {
-            var pop = new List<Individual>();
+            var pop = new List<(ArchiverParameters, double)>();
             for (int i = 0; i < _populationSize; i++)
             {
-                pop.Add(new Individual
+                var pars = new ArchiverParameters
                 {
-                    Parameters = new ArchiverParameters
-                    {
-                        WindowSize = _rand.Next(4, 33) * 1024,
-                        MinMatchLength = _rand.Next(3, 9),
-                        NoCompressionThreshold = _rand.Next(10, 90)
-                    }
-                });
+                    WindowSize = _rand.Next(4, 33) * 1024,
+                    MinMatchLength = _rand.Next(3, 9),
+                    NoCompressionThreshold = _rand.Next(10, 90)
+                };
+                pop.Add((pars, 0.0));
             }
             return pop;
         }
 
-        private void EvaluatePopulation(List<Individual> population)
+        private void EvaluatePopulation(List<(ArchiverParameters Parameters, double Fitness)> population)
         {
-            foreach (var ind in population)
+            for (int i = 0; i < population.Count; i++)
             {
-                ind.Fitness = _fitnessFunction(ind.Parameters);
+                double fit = _fitnessFunction(population[i].Parameters);
+                population[i] = (population[i].Parameters, fit);
+                TotalEvaluations++;
             }
         }
 
-        private Individual TournamentSelection(List<Individual> population)
+        private (ArchiverParameters Parameters, double Fitness) TournamentSelection(List<(ArchiverParameters Parameters, double Fitness)> population)
         {
-            Individual best = null;
+            (ArchiverParameters Parameters, double Fitness) best = default;
+            bool initialized = false;
+
             for (int i = 0; i < _tournamentSize; i++)
             {
                 var candidate = population[_rand.Next(population.Count)];
-                if (best == null || candidate.Fitness > best.Fitness)
+                if (!initialized || candidate.Fitness > best.Fitness)
                 {
                     best = candidate;
+                    initialized = true;
                 }
             }
             return best;
