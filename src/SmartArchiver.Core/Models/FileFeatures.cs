@@ -1,27 +1,28 @@
-﻿using System;
+﻿using System.Collections.Generic;
 
 namespace SmartSecureFileArchiver.Core.Models
 {
-    /// <summary>
-    /// Модель для зберігання характеристик (ознак) файлу, 
-    /// які використовуються аналізатором та нейромережею (MLP).
-    /// </summary>
     public class FileFeatures
     {
-        public string FileName { get; set; } = string.Empty;
-        public long FileSize { get; set; }
         public double Entropy { get; set; }
-        public double CompressionRatioEstimate { get; set; }
+        public double[] Histogram32 { get; set; } = new double[32];
+        public double PrintableAsciiRatio { get; set; }
+        public double AvgNewlineDistance { get; set; }
+        public double[] Autocorrelation16 { get; set; } = new double[16];
+        public double BigramEntropy { get; set; }
 
-        // Конструктор за замовчуванням
-        public FileFeatures() { }
-
-        // Конструктор з базовими параметрами
-        public FileFeatures(string fileName, long fileSize, double entropy)
+        public double[] ToVector()
         {
-            FileName = fileName;
-            FileSize = fileSize;
-            Entropy = entropy;
+            var vector = new List<double>
+            {
+                Entropy,
+                PrintableAsciiRatio,
+                AvgNewlineDistance,
+                BigramEntropy
+            };
+            vector.AddRange(Histogram32);
+            vector.AddRange(Autocorrelation16);
+            return vector.ToArray();
         }
     }
 }
