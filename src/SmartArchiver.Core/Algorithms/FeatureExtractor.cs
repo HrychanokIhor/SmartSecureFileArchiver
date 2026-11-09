@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using SmartSecureFileArchiver.Core.Models;
 
-namespace SmartSecureFileArchiver.Core.Algorithms
+namespace SmartArchiver.Core.Algorithms
 {
     public class FeatureExtractor
     {
