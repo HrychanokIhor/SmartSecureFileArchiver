@@ -50,10 +50,31 @@ namespace SmartArchiver.Core.Services
 
         private CanonicalHuffmanCodec.Encoded ReadEncoded(BinaryReader reader)
         {
+            long remainingStream = reader.BaseStream.Length - reader.BaseStream.Position;
+    
+            if (remainingStream < 4) 
+                throw new InvalidDataException("Несподіваний кінець потоку при читанні довжини заголовка.");
+        
             int headerLength = reader.ReadInt32();
+            remainingStream -= 4;
+
+            if (headerLength < 0 || headerLength > remainingStream || headerLength > 10 * 1024 * 1024)
+                throw new InvalidDataException($"Некоректна довжина заголовка: {headerLength}");
+
             byte[] header = reader.ReadBytes(headerLength);
+            remainingStream -= headerLength;
+
+            if (remainingStream < 4) 
+                throw new InvalidDataException("Несподіваний кінець потоку при читанні довжини даних.");
+        
             int dataLength = reader.ReadInt32();
+            remainingStream -= 4;
+
+            if (dataLength < 0 || dataLength > remainingStream)
+                throw new InvalidDataException($"Некоректна довжина даних: {dataLength}. Залишок потоку: {remainingStream}");
+
             byte[] data = reader.ReadBytes(dataLength);
+    
             return new CanonicalHuffmanCodec.Encoded(data, header);
         }
 
