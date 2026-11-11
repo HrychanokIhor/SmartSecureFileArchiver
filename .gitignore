@@ -484,3 +484,10 @@ $RECYCLE.BIN/
 # Temporary folders .NET compiling
 bin/
 obj/
+
+# Temporary files c# and .NET
+[Bb]in/
+[Oo]bj/
+
+# system files macOS
+.DS_Store
