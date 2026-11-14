@@ -24,5 +24,9 @@ public enum ArchiveErrorCode
     E_CODE,
     E_PAYLOAD,
     E_CRC,
-    E_VOLUMES
+    E_VOLUMES,
+    E_SHORT,
+    E_MAGIC,
+    E_LENGTH,
+    E_HMAC
 }

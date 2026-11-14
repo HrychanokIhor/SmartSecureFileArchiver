@@ -8,14 +8,16 @@ namespace SmartArchiver.Optimization
     /// </summary>
     public class RandomSearchOptimizer
     {
-        private readonly Random _rand = new Random();
+        private readonly Random _rand;
         private readonly Func<ArchiverParameters, double> _fitnessFunction;
         private readonly int _totalEvaluations;
 
-        public RandomSearchOptimizer(Func<ArchiverParameters, double> fitnessFunction, int totalEvaluations)
+        public RandomSearchOptimizer(Func<ArchiverParameters, double> fitnessFunction, int totalEvaluations, int? seed = null)
         {
             _fitnessFunction = fitnessFunction;
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(totalEvaluations);
             _totalEvaluations = totalEvaluations;
+            _rand = seed.HasValue ? new Random(seed.Value) : new Random();
         }
 
         /// <summary>
