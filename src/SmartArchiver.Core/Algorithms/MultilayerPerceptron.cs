@@ -1,25 +1,40 @@
 using System;
+using System.IO;
+using System.Text.Json;
 
 namespace SmartArchiver.Core.Algorithms
 {
+    public class MlpWeightsData
+    {
+        public int InputSize { get; set; }
+        public int HiddenSize { get; set; }
+        public int OutputSize { get; set; }
+        public double[][]? W1 { get; set; }
+        public double[]? B1 { get; set; }
+        public double[][]? W2 { get; set; }
+        public double[]? B2 { get; set; }
+    }
+
     public class MultilayerPerceptron
     {
         private int _inputSize;
         private int _hiddenSize;
         private int _outputSize;
 
-        private double[][] _w1; // [inputSize][hiddenSize]
-        private double[] _b1;   // [hiddenSize]
-        private double[][] _w2; // [hiddenSize][outputSize]
-        private double[] _b2;   // [outputSize]
+        private double[][] _w1 = Array.Empty<double[]>();
+        private double[] _b1 = Array.Empty<double>();
+        private double[][] _w2 = Array.Empty<double[]>();
+        private double[] _b2 = Array.Empty<double>();
 
-        private Random _rnd = new Random(42);
+        private readonly Random _rnd;
 
-        public MultilayerPerceptron(int inputSize = 52, int hiddenSize = 32, int outputSize = 7)
+        // Тепер можна передавати різні seed для порівняння 3+ ініціалізацій
+        public MultilayerPerceptron(int inputSize = 52, int hiddenSize = 32, int outputSize = 7, int seed = 42)
         {
             _inputSize = inputSize;
             _hiddenSize = hiddenSize;
             _outputSize = outputSize;
+            _rnd = new Random(seed);
 
             InitWeights();
         }
@@ -31,7 +46,7 @@ namespace SmartArchiver.Core.Algorithms
             {
                 _w1[i] = new double[_hiddenSize];
                 for (int j = 0; j < _hiddenSize; j++)
-                    _w1[i][j] = (_rnd.NextDouble() - 0.5) * Math.Sqrt(2.0 / _inputSize); // Xavier / He init
+                    _w1[i][j] = (_rnd.NextDouble() - 0.5) * Math.Sqrt(2.0 / _inputSize);
             }
             _b1 = new double[_hiddenSize];
 
@@ -67,7 +82,6 @@ namespace SmartArchiver.Core.Algorithms
                 if (sum > max) max = sum;
             }
 
-            // Softmax
             double expSum = 0;
             for (int k = 0; k < _outputSize; k++)
             {
@@ -105,7 +119,6 @@ namespace SmartArchiver.Core.Algorithms
 
                 double[] probs = Forward(x, out double[] hidden);
 
-                // Backpropagation (Cross-Entropy Loss + Softmax)
                 double[] dO = new double[_outputSize];
                 for (int k = 0; k < _outputSize; k++)
                     dO[k] = probs[k] - (k == target ? 1.0 : 0.0);
@@ -116,10 +129,9 @@ namespace SmartArchiver.Core.Algorithms
                     double err = 0;
                     for (int k = 0; k < _outputSize; k++)
                         err += dO[k] * _w2[j][k];
-                    dH[j] = hidden[j] > 0 ? err : 0; // Derivative of ReLU
+                    dH[j] = hidden[j] > 0 ? err : 0;
                 }
 
-                // Update Weights Layer 2
                 for (int j = 0; j < _hiddenSize; j++)
                     for (int k = 0; k < _outputSize; k++)
                         _w2[j][k] -= learningRate * dO[k] * hidden[j];
@@ -127,13 +139,49 @@ namespace SmartArchiver.Core.Algorithms
                 for (int k = 0; k < _outputSize; k++)
                     _b2[k] -= learningRate * dO[k];
 
-                // Update Weights Layer 1
                 for (int i = 0; i < _inputSize; i++)
                     for (int j = 0; j < _hiddenSize; j++)
                         _w1[i][j] -= learningRate * dH[j] * x[i];
 
                 for (int j = 0; j < _hiddenSize; j++)
                     _b1[j] -= learningRate * dH[j];
+            }
+        }
+
+        // Збереження ваг навченої моделі у файл
+        public void Save(string filePath)
+        {
+            var data = new MlpWeightsData
+            {
+                InputSize = _inputSize,
+                HiddenSize = _hiddenSize,
+                OutputSize = _outputSize,
+                W1 = _w1,
+                B1 = _b1,
+                W2 = _w2,
+                B2 = _b2
+            };
+            string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(filePath, json);
+        }
+
+        // Завантаження ваг для CLI та інференсу
+        public void Load(string filePath)
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("Model weights file not found.", filePath);
+
+            string json = File.ReadAllText(filePath);
+            var data = JsonSerializer.Deserialize<MlpWeightsData>(json);
+            if (data != null && data.W1 != null && data.B1 != null && data.W2 != null && data.B2 != null)
+            {
+                _inputSize = data.InputSize;
+                _hiddenSize = data.HiddenSize;
+                _outputSize = data.OutputSize;
+                _w1 = data.W1;
+                _b1 = data.B1;
+                _w2 = data.W2;
+                _b2 = data.B2;
             }
         }
     }
