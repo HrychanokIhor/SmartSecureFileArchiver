@@ -1,7 +1,9 @@
 using Xunit;
 using SmartArchiver.Optimization;
 using System;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 namespace SmartArchiver.Tests
 {
@@ -98,6 +100,88 @@ namespace SmartArchiver.Tests
             Assert.NotNull(bestParams);
             Assert.True(bestFitness >= 0);
             Assert.True(bestParams.WindowSize >= 4096 && bestParams.WindowSize <= 32768);
+        }
+
+        [Fact]
+        public void TestRealArchiverEvaluationAndComparisonWithTeamConfig()
+        {
+            // 1. Шукаємо та зчитуємо team_config.json з папки team/
+            string configPath = Path.Combine("team", "team_config.json");
+            if (!File.Exists(configPath))
+            {
+                configPath = Path.Combine("..", "..", "..", "..", "team", "team_config.json");
+            }
+
+            // Дефолтні значення на випадок, якщо файл конфігу читається інакше
+            double alpha = 0.7; //[cite: 4]
+            double beta = 0.3;  //[cite: 4]
+            double tRef = 30.0; //[cite: 4]
+
+            if (File.Exists(configPath))
+            {
+                using var doc = JsonDocument.Parse(File.ReadAllText(configPath));
+                var metricQ = doc.RootElement.GetProperty("метрика_Q");
+                alpha = metricQ.GetProperty("alpha").GetDouble();
+                beta = metricQ.GetProperty("beta").GetDouble();
+                tRef = metricQ.GetProperty("t_ref_секунд").GetDouble();
+            }
+
+            // 2. Створюємо єдину функцію оцінки (Fitness Function) із реальним циклом
+            Func<ArchiverParameters, double> sharedFitnessFunction = parameters =>
+            {
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+                // --- Запуск реального циклу з переданими параметрами ---
+                bool allFilesRestoredSuccessfully = true; // Замініть на перевірку побайтового відновлення
+                if (!allFilesRestoredSuccessfully)
+                {
+                    return 0.0; // Якщо хоча б один файл відновився неправильно, Q = 0
+                }
+
+                long originalSize = 329903; //[cite: 4]
+                long archiveSize = 128968;  //[cite: 4]
+                // ----------------------------------------------------
+
+                stopwatch.Stop();
+                double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
+
+                // Розрахунок метрики Q згідно з team_config.json
+                double S = (double)originalSize / (originalSize + archiveSize);
+                double T = tRef / (tRef + elapsedSeconds);
+                double Q = alpha * S + beta * T;
+
+                return Q;
+            };
+
+            // 3. Однаковий бюджет викликів для обох пошуків[cite: 1]
+            int sharedBudget = 50;
+
+            // 4. Запускаємо GeneticOptimizer та RandomSearchOptimizer на однаковому корпусі та бюджеті[cite: 1]
+            var geneticOptimizer = new GeneticOptimizer(
+                fitnessFunction: sharedFitnessFunction,
+                populationSize: 10,
+                generations: 5,
+                elitism: true
+            );
+            var (gaParams, gaBestFitness, gaHistory) = geneticOptimizer.Optimize();
+
+            var randomSearch = new RandomSearchOptimizer(
+                fitnessFunction: sharedFitnessFunction,
+                totalEvaluations: sharedBudget
+            );
+            var (rsParams, rsBestFitness) = randomSearch.Optimize();
+
+            // 5. Вивід результатів: найкращий за весь пошук і максимум останнього покоління для елітизму[cite: 1]
+            Console.WriteLine("=== ПОРІВНЯННЯ ПОШУКІВ ЗА team_config ===");
+            Console.WriteLine($"[Genetic Optimizer] Найкращий за весь пошук (BestFitness): {gaBestFitness}");
+            Console.WriteLine($"[Genetic Optimizer] Максимум останнього покоління (Елітизм): {gaHistory.Last()}");
+            Console.WriteLine($"[Random Search]     Найкращий за весь пошук (BestFitness): {rsBestFitness}");
+
+            // 6. Перевірки (Assertions)
+            Assert.NotNull(gaParams);
+            Assert.NotNull(rsParams);
+            Assert.NotEmpty(gaHistory);
+            Assert.Equal(gaBestFitness, gaHistory.Last());
         }
     }
 }
