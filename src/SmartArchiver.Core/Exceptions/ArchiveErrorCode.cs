@@ -22,5 +22,7 @@ public enum ArchiveErrorCode
     VolumeMismatch,
 
     E_CODE,
-    E_PAYLOAD
+    E_PAYLOAD,
+    E_CRC,
+    E_VOLUMES
 }

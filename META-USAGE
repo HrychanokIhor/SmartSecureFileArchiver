@@ -19,3 +19,7 @@
 OpenAI Codex підготував кодек блока SARC v1 за §3 FORMAT_SPEC_P2,
 підключення до SarcPipeline, тести §8 та документацію docs/SARC-V1-BLOCKS.md
 на прохання HrychanokIhor.
+
+OpenAI Codex підготував інтеграцію однофайлового payload SARC v1:
+підключення SarcPipeline до ArchiveManager, перевірки таблиць і CRC32,
+обхід стиснення для сирих блоків та регресійні тести.

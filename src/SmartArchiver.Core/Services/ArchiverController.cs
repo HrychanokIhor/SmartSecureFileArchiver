@@ -12,11 +12,11 @@ namespace SmartArchiver.Core.Services
         private readonly MultilayerPerceptron _mlp = new MultilayerPerceptron();
         private readonly Lz77Algorithm _lz77 = new Lz77Algorithm();
 
+        public int Classify(byte[] inputData) => _mlp.Predict(_extractor.Extract(inputData).ToVector());
+
         public IEnumerable<ILz77Token> CompressFile(byte[] inputData)
         {
-            var features = _extractor.Extract(inputData);
-            double[] vector = features.ToVector();
-            int fileType = _mlp.Predict(vector);
+            int fileType = Classify(inputData);
 
             if (fileType == 5)
             {
