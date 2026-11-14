@@ -1,0 +1,60 @@
+{
+  "files": 21,
+  "greedy": {
+    "InputBytes": 329903,
+    "ArchiveBytes": 134522,
+    "Seconds": 0.2381765,
+    "Exact": true,
+    "Q": 0.7948800378773342,
+    "FirstVolumeValue": 59,
+    "FirstGreedyValue": 59
+  },
+  "lazy": {
+    "InputBytes": 329903,
+    "ArchiveBytes": 131076,
+    "Seconds": 0.3314064,
+    "Exact": true,
+    "Q": 0.7976822765640024,
+    "FirstVolumeValue": 60,
+    "FirstGreedyValue": 60
+  },
+  "greedyPacking": {
+    "InputBytes": 329903,
+    "ArchiveBytes": 133009,
+    "Seconds": 0.2207242,
+    "Exact": true,
+    "Q": 0.7966771305306085,
+    "FirstVolumeValue": 59,
+    "FirstGreedyValue": 59
+  },
+  "genetic": {
+    "evaluations": 17,
+    "parameters": {
+      "WindowSize": 23552,
+      "MinMatchLength": 6,
+      "NoCompressionThreshold": 28
+    },
+    "bestQ": 0.7989510282927543,
+    "bestSoFar": [
+      0.7985862706118243,
+      0.7989510282927543,
+      0.7989510282927543,
+      0.7989510282927543
+    ],
+    "generationBest": [
+      0.7985862706118243,
+      0.7989510282927543,
+      0.7989510282927543,
+      0.7989510282927543
+    ]
+  },
+  "random": {
+    "evaluations": 17,
+    "parameters": {
+      "WindowSize": 26624,
+      "MinMatchLength": 4,
+      "NoCompressionThreshold": 15
+    },
+    "bestQ": 0.7989465776765781
+  }
+}

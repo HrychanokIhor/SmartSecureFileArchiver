@@ -9,7 +9,9 @@ namespace SmartArchiver.Optimization
     /// </summary>
     public class GeneticOptimizer
     {
-        private readonly Random _rand = new Random();
+        private readonly Random _rand;
+        private readonly List<double> _generationBest = new();
+        public IReadOnlyList<double> GenerationBest => _generationBest.AsReadOnly();
         private readonly Func<ArchiverParameters, double> _fitnessFunction;
 
         private readonly int _populationSize;
@@ -29,7 +31,7 @@ namespace SmartArchiver.Optimization
             int generations = 15,
             double mutationRate = 0.1,
             int tournamentSize = 3,
-            bool elitism = true)
+            bool elitism = true, int? seed = null)
         {
             _fitnessFunction = fitnessFunction ?? throw new ArgumentNullException(nameof(fitnessFunction));
             _populationSize = populationSize;
@@ -37,6 +39,7 @@ namespace SmartArchiver.Optimization
             _mutationRate = mutationRate;
             _tournamentSize = tournamentSize;
             _elitism = elitism;
+            _rand = seed.HasValue ? new Random(seed.Value) : new Random();
         }
 
         /// <summary>
@@ -46,6 +49,7 @@ namespace SmartArchiver.Optimization
         {
             var history = new List<double>();
             TotalEvaluations = 0;
+            _generationBest.Clear();
 
             // 1. Ініціалізація та первинна оцінка популяції (використовуємо кортежі замість класу Individual)
             var population = InitializePopulation();
@@ -54,8 +58,10 @@ namespace SmartArchiver.Optimization
             // Сортуємо популяцію за спаданням Fitness
             population = population.OrderByDescending(ind => ind.Fitness).ToList();
             
-            double bestSoFar = population.First().Fitness;
+            var bestIndividual = population.First();
+            double bestSoFar = bestIndividual.Fitness;
             history.Add(bestSoFar);
+            _generationBest.Add(bestSoFar);
 
             // 2. Основний цикл еволюції
             for (int gen = 0; gen < _generations; gen++)
@@ -96,12 +102,13 @@ namespace SmartArchiver.Optimization
                 if (currentGenBest > bestSoFar)
                 {
                     bestSoFar = currentGenBest;
+                    bestIndividual = population.First();
                 }
 
                 history.Add(bestSoFar);
+                _generationBest.Add(currentGenBest);
             }
 
-            var bestIndividual = population.First();
             return (bestIndividual.Parameters, bestSoFar, history);
         }
 
