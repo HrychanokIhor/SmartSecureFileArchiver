@@ -5,15 +5,26 @@ using SmartArchiver.Core.Services.Huffman;
 
 namespace SmartArchiver.Core.Services
 {
+    // Додаємо перерахування для вибору режиму
+    public enum CompressionMode
+    {
+        Greedy,
+        Lazy
+    }
+
     public class SarcPipeline
     {
         private readonly Lz77Algorithm _lz77 = new();
         private readonly Lz77HuffmanCodec _huffman = new();
 
-        public byte[] Compress(byte[] input)
+        // Додано вибір режиму (за замовчуванням Lazy)
+        public byte[] Compress(byte[] input, CompressionMode mode = CompressionMode.Lazy)
         {
-            // 1. LZ77 -> Адаптер (тепер це IReadOnlyList)
-            var lzTokens = _lz77.EncodeLazy(input);
+            // 1. LZ77 -> Адаптер (тепер викликаємо потрібний метод залежно від режиму)
+            var lzTokens = mode == CompressionMode.Lazy 
+                ? _lz77.EncodeLazy(input) 
+                : _lz77.Encode(input);
+                
             var huffTokens = Lz77HuffmanAdapter.ToHuffman(lzTokens);
 
             // 2. Гафман
@@ -29,6 +40,7 @@ namespace SmartArchiver.Core.Services
 
             return ms.ToArray();
         }
+
         public byte[] Decompress(byte[] compressedData)
         {
             using var ms = new MemoryStream(compressedData);
@@ -58,6 +70,7 @@ namespace SmartArchiver.Core.Services
             int headerLength = reader.ReadInt32();
             remainingStream -= 4;
 
+            // Виправлено синтаксичну помилку та встановлено ліміт у 10 МБ
             if (headerLength < 0 || headerLength > remainingStream || headerLength > 10 * 1024 * 1024)
                 throw new InvalidDataException($"Некоректна довжина заголовка: {headerLength}");
 
