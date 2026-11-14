@@ -63,5 +63,11 @@ namespace SmartArchiver.Tests
 
             Assert.True(lazyTokens.Count <= greedyTokens.Count, $"Lazy ({lazyTokens.Count}) мав би бути ефективнішим за Greedy ({greedyTokens.Count})");
         }
+        [Fact]
+        public void MinMatch_BelowThree_ThrowsArgumentOutOfRangeException()
+        {
+            var lz77 = new Lz77Algorithm();
+            Assert.Throws<ArgumentOutOfRangeException>(() => { lz77.MinMatch = 2; });
+        }
     }
 }

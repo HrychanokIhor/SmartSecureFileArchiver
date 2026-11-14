@@ -23,14 +23,14 @@ internal sealed class SingleFilePayloadCodec(ArchiverController controller)
         byte[] encodedName = Utf8.GetBytes(name);
         if (encodedName.Length > ushort.MaxValue) throw Bad("File name is too long.");
         byte type = input.Length == 0 ? (byte)6 : (byte)controller.Classify(input);
-        bool lazy = type is 0 or 1;
+        var mode = type is 0 or 1 ? CompressionMode.Lazy : CompressionMode.Greedy;
         var blocks = new List<Block>();
         long volumeSize = VolumeFormat.Overhead + 18 + encodedName.Length;
         int offset = 0;
         do
         {
             byte[] raw = input.AsSpan(offset, Math.Min(BlockSize, input.Length - offset)).ToArray();
-            byte[] coded = raw.Length == 0 || type == 5 ? raw : _pipeline.Compress(raw, lazy);
+            byte[] coded = raw.Length == 0 || type == 5 ? raw : _pipeline.Compress(raw, mode);
             bool isRaw = coded.Length >= raw.Length;
             var block = new Block(raw.Length, isRaw ? raw : coded, isRaw);
             volumeSize += 15 + block.Bytes.Length;
