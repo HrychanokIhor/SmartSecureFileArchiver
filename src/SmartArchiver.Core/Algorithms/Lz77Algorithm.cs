@@ -7,10 +7,51 @@ namespace SmartArchiver.Core.Algorithms
 {
     public class Lz77Algorithm
     {
-        // Явні параметри алгоритму
-        public int WindowSize { get; set; } = 32768;
-        public int MinMatch { get; set; } = 3;
-        public int MaxMatch { get; set; } = 258;
+        private int _windowSize = 32768;
+        private int _minMatch = 3;
+        private int _maxMatch = 258;
+
+        public int WindowSize
+        {
+            get => _windowSize;
+            set
+            {
+                if (value < 1 || value > 32768) 
+                    throw new ArgumentOutOfRangeException(nameof(WindowSize), "WindowSize має бути від 1 до 32768");
+                _windowSize = value;
+            }
+        }
+
+        public int MinMatch
+        {
+            get => _minMatch;
+            set
+            {
+                if (value < 3 || value > _maxMatch) 
+                    throw new ArgumentOutOfRangeException(nameof(MinMatch), $"MinMatch має бути від 3 до MaxMatch ({_maxMatch})");
+                _minMatch = value;
+            }
+        }
+
+        public int MaxMatch
+        {
+            get => _maxMatch;
+            set
+            {
+                if (value < _minMatch || value > 258) 
+                    throw new ArgumentOutOfRangeException(nameof(MaxMatch), $"MaxMatch має бути від MinMatch ({_minMatch}) до 258");
+                _maxMatch = value;
+            }
+        }
+
+        // Обов'язкова валідація параметрів перед запуском кодування
+        private void ValidateParameters()
+        {
+            if (_minMatch < 3 || _maxMatch > 258 || _minMatch > _maxMatch)
+                throw new ArgumentOutOfRangeException(nameof(MinMatch), "MinMatch має бути в межах від 3 до MaxMatch (<= 258)");
+            if (_windowSize < 1 || _windowSize > 32768)
+                throw new ArgumentOutOfRangeException(nameof(WindowSize), "WindowSize має бути від 1 до 32768");
+        }
 
         public byte[] Decode(IEnumerable<ILz77Token> tokens)
         {
@@ -38,6 +79,8 @@ namespace SmartArchiver.Core.Algorithms
 
         public IEnumerable<ILz77Token> Encode(byte[] input)
         {
+            ValidateParameters(); // Перевірка параметрів на вході
+
             var tokens = new List<ILz77Token>();
             var dictionary = new Dictionary<int, List<int>>();
             int i = 0;
@@ -105,6 +148,8 @@ namespace SmartArchiver.Core.Algorithms
 
         public IEnumerable<ILz77Token> EncodeLazy(byte[] input)
         {
+            ValidateParameters(); // Перевірка параметрів на вході
+
             var tokens = new List<ILz77Token>();
             var dictionary = new Dictionary<int, List<int>>();
             int i = 0;
