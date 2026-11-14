@@ -9,15 +9,12 @@ namespace SmartArchiver.Core.Services
     public class ArchiverController
     {
         private readonly FeatureExtractor _extractor = new FeatureExtractor();
-        private readonly MultilayerPerceptron _mlp;
-        private readonly DataNormalizer _normalizer;
+        private readonly MultilayerPerceptron? _mlp;
+        private readonly DataNormalizer? _normalizer;
         private readonly Lz77Algorithm _lz77 = new Lz77Algorithm();
 
-        public ArchiverController()
-        {
-            _mlp = new MultilayerPerceptron();
-            _normalizer = new DataNormalizer();
-        }
+        // Until a trained model is supplied, use the general LZ77 path.
+        public ArchiverController() { }
 
         public ArchiverController(MultilayerPerceptron mlp, DataNormalizer normalizer)
         {
@@ -53,6 +50,8 @@ namespace SmartArchiver.Core.Services
 
         public int Classify(byte[] inputData)
         {
+            if (_mlp is null || _normalizer is null) return 6;
+
             var features = _extractor.Extract(inputData);
             double[] vector = features.ToVector();
             double[] normalizedVector = _normalizer.Transform(vector);
