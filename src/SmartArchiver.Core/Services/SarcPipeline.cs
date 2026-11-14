@@ -23,12 +23,16 @@ namespace SmartArchiver.Core.Services
                 : _lz77.Encode(input);
                 
             var huffTokens = Lz77HuffmanAdapter.ToHuffman(lzTokens);
-            return _codec.EncodeBlock(huffTokens);
+            
+            // Викликаємо точну назву методу Ігоря: Encode
+            return _codec.Encode(huffTokens);
         }
 
         public byte[] Decompress(byte[] compressedData, int expectedRawLength)
         {
-            var huffTokens = _codec.DecodeBlock(compressedData, expectedRawLength);
+            // Викликаємо точну назву методу Ігоря: Decode
+            var huffTokens = _codec.Decode(compressedData, expectedRawLength);
+            
             var lz77Tokens = Lz77HuffmanAdapter.FromHuffman(huffTokens);
             return _lz77.Decode(lz77Tokens);
         }
