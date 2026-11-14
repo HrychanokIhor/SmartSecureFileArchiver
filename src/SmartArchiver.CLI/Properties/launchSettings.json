@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SmartArchiver.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "pack \"C:\\Users\\Admin\\OneDrive\\Desktop\\SarcTest\\Новий DOCX Document.docx\" \"C:\\Users\\Admin\\OneDrive\\Desktop\\SarcTest\\archive.sarc\" \"12345\""
+    }
+  }
+}
