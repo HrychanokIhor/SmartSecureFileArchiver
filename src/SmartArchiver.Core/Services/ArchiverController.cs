@@ -13,25 +13,23 @@ namespace SmartArchiver.Core.Services
         private readonly DataNormalizer _normalizer;
         private readonly Lz77Algorithm _lz77 = new Lz77Algorithm();
 
-        // Конструктор за замовчуванням (щоб Program.cs не видавав помилку CS7036)
         public ArchiverController()
         {
             _mlp = new MultilayerPerceptron();
             _normalizer = new DataNormalizer();
         }
 
-        // Конструктор із параметрами (для навченої моделі та нормалізатора)
         public ArchiverController(MultilayerPerceptron mlp, DataNormalizer normalizer)
         {
             _mlp = mlp ?? throw new ArgumentNullException(nameof(mlp));
             _normalizer = normalizer ?? throw new ArgumentNullException(nameof(normalizer));
         }
 
+        // Повертаємо метод CompressFile для сумісності з ArchiveManager.cs (виправляє помилку CS1061)
         public IEnumerable<ILz77Token> CompressFile(byte[] inputData)
         {
             int fileType = Classify(inputData);
 
-            // Стратегія NO_COMPRESSION для класу 5 (coded_len == raw_len в обхід кодеків)
             if (fileType == 5)
             {
                 Console.WriteLine("[MLP Classifier] Файл визначено як 'Вже стиснутий' (Клас 5). Стратегія: NO_COMPRESSION.");
@@ -57,18 +55,15 @@ namespace SmartArchiver.Core.Services
         {
             var features = _extractor.Extract(inputData);
             double[] vector = features.ToVector();
+            double[] normalizedVector = _normalizer.Transform(vector);
+            return _mlp.Predict(normalizedVector);
+        }
 
-            // Якщо нормалізатор ще не був навчений/завантажений, обережно пропускаємо або трансформуємо
-            try
-            {
-                vector = _normalizer.Transform(vector);
-            }
-            catch (InvalidOperationException)
-            {
-                // Якщо нормування не завантажене, використовуємо сирий вектор
-            }
-
-            return _mlp.Predict(vector);
+        // Синхронізовано з PR №20: повернення сирих байтів в обхід кодеків (coded_len == raw_len)
+        public byte[] ProcessNoCompression(byte[] inputData)
+        {
+            Console.WriteLine("[ArchiverController] Стратегія: NO_COMPRESSION. Запуск в обхід LZ77/Huffman (coded_len == raw_len).");
+            return inputData;
         }
     }
 }

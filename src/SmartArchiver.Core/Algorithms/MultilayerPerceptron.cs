@@ -28,7 +28,6 @@ namespace SmartArchiver.Core.Algorithms
 
         private readonly Random _rnd;
 
-        // Тепер можна передавати різні seed для порівняння 3+ ініціалізацій
         public MultilayerPerceptron(int inputSize = 52, int hiddenSize = 32, int outputSize = 7, int seed = 42)
         {
             _inputSize = inputSize;
@@ -62,6 +61,9 @@ namespace SmartArchiver.Core.Algorithms
 
         public double[] Forward(double[] input, out double[] hidden)
         {
+            if (input.Length != _inputSize)
+                throw new ArgumentException($"Input size ({input.Length}) does not match MLP input size ({_inputSize}).");
+
             hidden = new double[_hiddenSize];
             for (int j = 0; j < _hiddenSize; j++)
             {
@@ -148,7 +150,6 @@ namespace SmartArchiver.Core.Algorithms
             }
         }
 
-        // Збереження ваг навченої моделі у файл
         public void Save(string filePath)
         {
             var data = new MlpWeightsData
@@ -165,7 +166,7 @@ namespace SmartArchiver.Core.Algorithms
             File.WriteAllText(filePath, json);
         }
 
-        // Завантаження ваг для CLI та інференсу
+        // Сувора валідація при Load згідно з вимогою №3
         public void Load(string filePath)
         {
             if (!File.Exists(filePath))
@@ -173,16 +174,20 @@ namespace SmartArchiver.Core.Algorithms
 
             string json = File.ReadAllText(filePath);
             var data = JsonSerializer.Deserialize<MlpWeightsData>(json);
-            if (data != null && data.W1 != null && data.B1 != null && data.W2 != null && data.B2 != null)
+
+            if (data?.W1 == null || data?.B1 == null || data?.W2 == null || data?.B2 == null ||
+                data.W1.Length != data.InputSize || data.W2.Length != data.HiddenSize)
             {
-                _inputSize = data.InputSize;
-                _hiddenSize = data.HiddenSize;
-                _outputSize = data.OutputSize;
-                _w1 = data.W1;
-                _b1 = data.B1;
-                _w2 = data.W2;
-                _b2 = data.B2;
+                throw new InvalidDataException("Invalid or incompatible MLP weights structure in JSON file.");
             }
+
+            _inputSize = data.InputSize;
+            _hiddenSize = data.HiddenSize;
+            _outputSize = data.OutputSize;
+            _w1 = data.W1;
+            _b1 = data.B1;
+            _w2 = data.W2;
+            _b2 = data.B2;
         }
     }
 }

@@ -17,6 +17,9 @@ namespace SmartArchiver.Core.Algorithms
 
         public void Fit(double[][] trainInputs)
         {
+            if (trainInputs == null || trainInputs.Length == 0)
+                throw new ArgumentException("Train inputs cannot be null or empty.");
+
             int featureCount = trainInputs[0].Length;
             int sampleCount = trainInputs.Length;
 
@@ -51,6 +54,9 @@ namespace SmartArchiver.Core.Algorithms
             if (_mean == null || _std == null)
                 throw new InvalidOperationException("Normalizer has not been fitted or loaded yet.");
 
+            if (input.Length != _mean.Length)
+                throw new ArgumentException($"Input feature count ({input.Length}) does not match normalizer dimensions ({_mean.Length}).");
+
             double[] normalized = new double[input.Length];
             for (int i = 0; i < input.Length; i++)
             {
@@ -66,6 +72,7 @@ namespace SmartArchiver.Core.Algorithms
             File.WriteAllText(filePath, json);
         }
 
+        // Сувора валідація при Load згідно з вимогою №3
         public void Load(string filePath)
         {
             if (!File.Exists(filePath))
@@ -73,11 +80,12 @@ namespace SmartArchiver.Core.Algorithms
 
             string json = File.ReadAllText(filePath);
             var paramsObj = JsonSerializer.Deserialize<NormalizationParameters>(json);
-            if (paramsObj?.Mean != null && paramsObj.Std != null)
-            {
-                _mean = paramsObj.Mean;
-                _std = paramsObj.Std;
-            }
+
+            if (paramsObj?.Mean == null || paramsObj?.Std == null || paramsObj.Mean.Length != paramsObj.Std.Length)
+                throw new InvalidDataException("Invalid or incomplete normalization parameters in JSON file.");
+
+            _mean = paramsObj.Mean;
+            _std = paramsObj.Std;
         }
     }
 }
