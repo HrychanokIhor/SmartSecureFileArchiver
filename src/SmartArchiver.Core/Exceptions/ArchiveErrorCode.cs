@@ -19,5 +19,8 @@ public enum ArchiveErrorCode
     AuthenticationFailed,
 
     /// <summary>Том належить іншому архіву (інша сіль), ніж ключі, якими його відкривають.</summary>
-    VolumeMismatch
+    VolumeMismatch,
+
+    E_CODE,
+    E_PAYLOAD
 }
