@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using SmartArchiver.Core.Algorithms;
 using SmartArchiver.Core.Interfaces;
-using SmartArchiver.Core.Abstractions;
+using SmartArchiver.Core.Models;
 
 namespace SmartArchiver.Core.Services
 {
@@ -12,7 +12,6 @@ namespace SmartArchiver.Core.Services
         private readonly MultilayerPerceptron _mlp = new MultilayerPerceptron();
         private readonly Lz77Algorithm _lz77 = new Lz77Algorithm();
 
-        // ПОВЕРТАЄМО НАЗАД ІНТЕРФЕЙС ILz77Token
         public IEnumerable<ILz77Token> CompressFile(byte[] inputData)
         {
             var features = _extractor.Extract(inputData);
@@ -22,11 +21,10 @@ namespace SmartArchiver.Core.Services
             if (fileType == 5)
             {
                 Console.WriteLine("[MLP Classifier] Файл визначено як 'Вже стиснутий' (Клас 5). Стратегія: NO_COMPRESSION.");
-                var rawTokens = new List<ILz77Token>();
+                var rawTokens = new List<ILz77Token>(inputData.Length);
                 foreach (byte b in inputData)
                 {
-                    // Явне приведення (cast) до ILz77Token
-                    rawTokens.Add((ILz77Token)new Lz77Token(0, 0, b));
+                    rawTokens.Add(new LiteralToken(b));
                 }
                 return rawTokens;
             }
