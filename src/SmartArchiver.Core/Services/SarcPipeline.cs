@@ -1,24 +1,40 @@
+using System;
+using System.Collections.Generic;
 using SmartArchiver.Core.Algorithms;
 using SmartArchiver.Core.Services.Huffman;
 
-namespace SmartArchiver.Core.Services;
-
-/// <summary>Compresses one SARC v1 block; volume framing and raw blocks belong to the caller.</summary>
-public class SarcPipeline
+namespace SmartArchiver.Core.Services
 {
-    private readonly Lz77Algorithm _lz77 = new();
-    private readonly SarcBlockCodec _huffman = new();
-
-    public byte[] Compress(byte[] input)
+    public enum CompressionMode
     {
-        ArgumentNullException.ThrowIfNull(input);
-        return _huffman.Encode(Lz77HuffmanAdapter.ToHuffman(_lz77.EncodeLazy(input)));
+        Greedy,
+        Lazy
     }
 
-    public byte[] Decompress(byte[] compressedData, int? expectedRawLength = null)
+    public class SarcPipeline
     {
-        ArgumentNullException.ThrowIfNull(compressedData);
-        var tokens = _huffman.Decode(compressedData, expectedRawLength);
-        return _lz77.Decode(Lz77HuffmanAdapter.FromHuffman(tokens));
+        private readonly Lz77Algorithm _lz77 = new();
+        private readonly SarcBlockCodec _codec = new();
+
+        public byte[] Compress(byte[] input, CompressionMode mode = CompressionMode.Lazy)
+        {
+            var lzTokens = mode == CompressionMode.Lazy 
+                ? _lz77.EncodeLazy(input) 
+                : _lz77.Encode(input);
+                
+            var huffTokens = Lz77HuffmanAdapter.ToHuffman(lzTokens);
+            
+            // Викликаємо точну назву методу Ігоря: Encode
+            return _codec.Encode(huffTokens);
+        }
+
+        public byte[] Decompress(byte[] compressedData, int expectedRawLength)
+        {
+            // Викликаємо точну назву методу Ігоря: Decode
+            var huffTokens = _codec.Decode(compressedData, expectedRawLength);
+            
+            var lz77Tokens = Lz77HuffmanAdapter.FromHuffman(huffTokens);
+            return _lz77.Decode(lz77Tokens);
+        }
     }
 }
